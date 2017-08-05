@@ -12,6 +12,7 @@ RUN \
   unzip pgweb_linux_amd64.zip -d /usr/bin && \
   mv /usr/bin/pgweb_linux_amd64 /usr/bin/pgweb && \
   rm -f pgweb_linux_amd64.zip
-
+COPY *.sh /
 EXPOSE 8081
-CMD ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081"]
+ENTRYPOINT ["/entrypoint.sh"]
+#CMD ["/usr/bin/pgweb", "--bind=0.0.0.0", "--listen=8081"]
