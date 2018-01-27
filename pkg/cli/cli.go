@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-flags"
@@ -45,7 +46,7 @@ func initClientUsingBookmark(bookmarkPath, bookmarkName string) (*client.Client,
 
 	var ssh *shared.SSHInfo
 	if !bookmark.SSHInfoIsEmpty() {
-		ssh = &bookmark.Ssh
+		ssh = bookmark.Ssh
 	}
 
 	return client.NewFromUrl(connStr, ssh)
@@ -77,6 +78,10 @@ func initClient() {
 	err = cl.Test()
 	if err != nil {
 		exitWithMessage(err.Error())
+	}
+
+	if !command.Opts.Sessions {
+		fmt.Printf("Server runs PostgreSQL v%s\n", cl.ServerVersion())
 	}
 
 	fmt.Println("Checking database objects...")
@@ -144,6 +149,9 @@ func startServer() {
 		err := router.Run(fmt.Sprintf("%v:%v", options.HttpHost, options.HttpPort))
 		if err != nil {
 			fmt.Println("Cant start server:", err)
+			if strings.Contains(err.Error(), "address already in use") {
+				openPage()
+			}
 			os.Exit(1)
 		}
 	}()
@@ -186,6 +194,11 @@ func Run() {
 	// Print memory usage every 30 seconds with debug flag
 	if options.Debug {
 		util.StartProfiler()
+	}
+
+	// Start session cleanup worker
+	if options.Sessions && !command.Opts.DisableConnectionIdleTimeout {
+		go api.StartSessionCleanup()
 	}
 
 	startServer()

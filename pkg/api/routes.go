@@ -10,6 +10,10 @@ func SetupMiddlewares(group *gin.RouterGroup) {
 		group.Use(requestInspectMiddleware())
 	}
 
+	if command.Opts.Cors {
+		group.Use(corsMiddleware())
+	}
+
 	group.Use(dbCheckMiddleware())
 }
 
@@ -47,5 +51,8 @@ func SetupRoutes(router *gin.Engine) {
 		api.POST("/explain", ExplainQuery)
 		api.GET("/history", GetHistory)
 		api.GET("/bookmarks", GetBookmarks)
+		api.GET("/export", DataExport)
 	}
+
+	group.GET("/connect/:resource", ConnectWithBackend)
 }

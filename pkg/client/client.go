@@ -5,6 +5,7 @@ import (
 	neturl "net/url"
 	"reflect"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -20,6 +21,8 @@ type Client struct {
 	db               *sqlx.DB
 	tunnel           *Tunnel
 	serverVersion    string
+	lastQueryTime    time.Time
+	External         bool
 	History          []history.Record `json:"history"`
 	ConnectionString string           `json:"connection_string"`
 }
@@ -71,6 +74,9 @@ func NewFromUrl(url string, sshInfo *shared.SSHInfo) (*Client, error) {
 	var tunnel *Tunnel
 
 	if sshInfo != nil {
+		if command.Opts.DisableSSH {
+			return nil, fmt.Errorf("ssh connections are disabled")
+		}
 		if command.Opts.Debug {
 			fmt.Println("Opening SSH tunnel for:", sshInfo)
 		}
@@ -260,7 +266,16 @@ func (client *Client) SetReadOnlyMode() error {
 	return nil
 }
 
+func (client *Client) ServerVersion() string {
+	return client.serverVersion
+}
+
 func (client *Client) query(query string, args ...interface{}) (*Result, error) {
+	// Update the last usage time
+	defer func() {
+		client.lastQueryTime = time.Now().UTC()
+	}()
+
 	// We're going to force-set transaction mode on every query.
 	// This is needed so that default mode could not be changed by user.
 	if command.Opts.ReadOnly {
@@ -349,6 +364,10 @@ func (client *Client) Close() error {
 	}
 
 	return nil
+}
+
+func (client *Client) IsIdle() bool {
+	return time.Since(client.lastQueryTime).Minutes() > command.Opts.ConnectionIdleTimeout
 }
 
 // Fetch all rows as strings for a single column

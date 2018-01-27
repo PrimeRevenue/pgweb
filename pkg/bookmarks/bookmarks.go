@@ -14,18 +14,18 @@ import (
 )
 
 type Bookmark struct {
-	Url      string         `json:"url"`      // Postgres connection URL
-	Host     string         `json:"host"`     // Server hostname
-	Port     int            `json:"port"`     // Server port
-	User     string         `json:"user"`     // Database user
-	Password string         `json:"password"` // User password
-	Database string         `json:"database"` // Database name
-	Ssl      string         `json:"ssl"`      // Connection SSL mode
-	Ssh      shared.SSHInfo `json:"ssh"`      // SSH tunnel config
+	Url      string          `json:"url"`      // Postgres connection URL
+	Host     string          `json:"host"`     // Server hostname
+	Port     int             `json:"port"`     // Server port
+	User     string          `json:"user"`     // Database user
+	Password string          `json:"password"` // User password
+	Database string          `json:"database"` // Database name
+	Ssl      string          `json:"ssl"`      // Connection SSL mode
+	Ssh      *shared.SSHInfo `json:"ssh"`      // SSH tunnel config
 }
 
 func (b Bookmark) SSHInfoIsEmpty() bool {
-	return b.Ssh.User == "" && b.Ssh.Host == "" && b.Ssh.Port == ""
+	return b.Ssh == nil || b.Ssh.User == "" && b.Ssh.Host == "" && b.Ssh.Port == ""
 }
 
 func (b Bookmark) ConvertToOptions() command.Options {
@@ -55,7 +55,7 @@ func readServerConfig(path string) (Bookmark, error) {
 	}
 
 	// List of all supported by portgres modes
-	modes := []string{"disable", "allow", "prefer", "required", "verify-ca", "verify-full"}
+	modes := []string{"disable", "allow", "prefer", "require", "verify-ca", "verify-full"}
 	valid := false
 
 	for _, mode := range modes {
@@ -69,6 +69,10 @@ func readServerConfig(path string) (Bookmark, error) {
 	// Typical typo: ssl mode set to "disabled"
 	if bookmark.Ssl == "" || !valid {
 		bookmark.Ssl = "disable"
+	}
+
+	if bookmark.Ssh != nil && bookmark.Ssh.Port == "" {
+		bookmark.Ssh.Port = "22"
 	}
 
 	return bookmark, err

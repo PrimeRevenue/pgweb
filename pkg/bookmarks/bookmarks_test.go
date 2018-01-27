@@ -95,18 +95,21 @@ func Test_GetBookmark(t *testing.T) {
 }
 
 func Test_Bookmark_SSHInfoIsEmpty(t *testing.T) {
-	emptySSH := shared.SSHInfo{
+	emptySSH := &shared.SSHInfo{
 		Host: "",
 		Port: "",
 		User: "",
 	}
-	populatedSSH := shared.SSHInfo{
+	populatedSSH := &shared.SSHInfo{
 		Host: "localhost",
 		Port: "8080",
 		User: "postgres",
 	}
 
-	b := Bookmark{Ssh: emptySSH}
+	b := Bookmark{Ssh: nil}
+	assert.True(t, b.SSHInfoIsEmpty())
+
+	b = Bookmark{Ssh: emptySSH}
 	assert.True(t, b.SSHInfoIsEmpty())
 
 	b.Ssh = populatedSSH

@@ -1,3 +1,44 @@
+## 0.9.11 - 2017-12-07
+
+- Fix ssl mode for the connection url in the bookmarks, GH-320
+- Add support for CORS, GH-321
+- Fix custom query results counter for empty queries, GH-322
+- Reorganize the table context menu, GH-323
+- Disable database connection string text field autocomplete, GH-327
+- Add db prefix to the table export files, GH-329
+- Add database view context menu with export actions, GH-330
+
+## 0.9.10 - 2017-11-03
+
+- Make idle connection timeout configurable, [GH-282]
+- Fix panics when sshinfo is not set on bookmarks, [GH-296]
+- Dot now allow using startup bookmark in multi-session mode, [GH-300]
+- Add ability to copy table name from the sidebar, [GH-301]
+
+## 0.9.9 - 2017-09-28
+
+- Automatically format JSON data exports, GH-255
+- Update Docker image to alpine:3.6, GH-256
+- Print out PostgreSQL server version on start in a single-session mode, GH-264
+- Record last query timestamp for the client connection, GH-265
+- Add context menu for table headers in browse mode (copy name, see unique values), GH-268
+- Add ability to export current database dump, GH-270
+- Automatically open pgweb in browser on start if its already running, GH-272
+- Connect to the database with credentials provided by a third-party backend, GH-266
+- Automatically close idle sessions (no activity in 1 hour), GH-275
+- Allow connecting via SSH with a custom private key and other fixes, GH-277
+- Add options to disable SSH connections, GH-279
+
+## 0.9.8 - 2017-08-04
+
+- Fixed error checking in the API, GH-234
+- Fixed activity tab to support PG 9.x versions, GH-237
+- Remember sort column and order for pagination, GH-240
+- Use `sslmode=disable` for bookmarks without sslmode option, GH-244
+- Javascript fixes for IE9-11, GH-245
+- Require confirmation for the disconnect, GH-246
+- Clean the results table on manual disconnect
+
 ## 0.9.7 - 2017-04-04
 
 - Fixed issue with locked session and empty db url, GH-206

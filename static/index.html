@@ -13,7 +13,9 @@
   <script type="text/javascript" src="static/js/ace.js"></script>
   <script type="text/javascript" src="static/js/ace-pgsql.js"></script>
   <script type="text/javascript" src="static/js/bootstrap-contextmenu.js"></script>
-  <script type="text/javascript" src="static/js/app.js"></script>
+  <script type="text/javascript" src="static/js/utils.js"></script>
+  <script type="text/javascript" src="static/js/bootstrap3-typeahead.min.js"></script>
+  <script type="text/javascript" src="static/js/app.js"></script> 
 </head>
 <body>
   <div id="main">
@@ -23,7 +25,7 @@
         <li id="table_structure">Structure</li>
         <li id="table_indexes">Indexes</li>
         <li id="table_constraints">Constraints</li>
-        <li id="table_query" class="selected">SQL Query</li>
+        <li id="table_query" class="selected">Query</li>
         <li id="table_history">History</li>
         <li id="table_activity">Activity</li>
         <li id="table_connection">Connection</li>
@@ -37,8 +39,9 @@
     <div id="sidebar">
       <div class="tables-list">
         <div class="wrap">
-          <div class="title main">
+          <div class="title main"> 
             <i class="fa fa-database"></i> <span class="current-database" id="current_database"></span>
+            <input class="typeahead current_database" id="database_search" type="text" placeholder="Search database">
             <span class="refresh" id="refresh_tables" title="Refresh tables list"><i class="fa fa-refresh"></i></span>
           </div>
           <div id="objects"></div>
@@ -130,8 +133,11 @@
           <div class="form-group">
             <div class="col-sm-12">
               <label>Enter server URL scheme</label>
-              <input type="text" class="form-control" id="connection_url" name="url">
-              <p class="help-block">URL format: postgres://user:password@host:port/db?sslmode=mode</p>
+              <input type="text" class="form-control" id="connection_url" name="url" autocomplete="off">
+              <p class="help-block">
+                URL format: postgres://user:password@host:port/db?sslmode=mode<br/>
+                Read more on PostgreSQL <a href="https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING" target="_blank">connection string format</a>.
+              </p>
             </div>
           </div>
         </div>
@@ -146,8 +152,11 @@
 
           <div class="form-group">
             <label class="col-sm-3 control-label">Host</label>
-            <div class="col-sm-9">
+            <div class="col-sm-7">
               <input type="text" id="pg_host" class="form-control" />
+            </div>
+            <div class="col-sm-2 no-left-padding">
+              <input type="text" id="pg_port" class="form-control" placeholder="5432" />
             </div>
           </div>
 
@@ -173,14 +182,7 @@
           </div>
 
           <div class="form-group">
-            <label class="col-sm-3 control-label">Port</label>
-            <div class="col-sm-9">
-              <input type="text" id="pg_port" class="form-control" placeholder="5432" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="col-sm-3 control-label">SSL</label>
+            <label class="col-sm-3 control-label">SSL Mode</label>
             <div class="col-sm-9">
               <select class="form-control" id="connection_ssl">
                 <option value="disable">disable</option>
@@ -192,10 +194,15 @@
         </div>
 
         <div class="connection-ssh-group">
+          <hr/>
+
           <div class="form-group">
             <label class="col-sm-3 control-label">SSH Host</label>
-            <div class="col-sm-9">
+            <div class="col-sm-7">
               <input type="text" id="ssh_host" class="form-control" />
+            </div>
+            <div class="col-sm-2 no-left-padding">
+              <input type="text" id="ssh_port" class="form-control" placeholder="22" />
             </div>
           </div>
 
@@ -214,9 +221,9 @@
           </div>
 
           <div class="form-group">
-            <label class="col-sm-3 control-label">SSH Port</label>
+            <label class="col-sm-3 control-label">SSH Key</label>
             <div class="col-sm-9">
-              <input type="text" id="ssh_port" class="form-control" placeholder="optional" />
+              <input type="text" id="ssh_key" class="form-control" placeholder="optional" />
             </div>
           </div>
         </div>
@@ -234,16 +241,39 @@
   </div>
   <div id="tables_context_menu">
     <ul class="dropdown-menu" role="menu">
+      <li><a href="#" data-action="copy">Copy Table Name</a></li>
+      <li class="divider"></li>
+      <li><a href="#" data-action="export" data-format="json">Export to JSON</a></li>
+      <li><a href="#" data-action="export" data-format="csv">Export to CSV</a></li>
+      <li><a href="#" data-action="export" data-format="xml">Export to XML</a></li>
+      <li><a href="#" data-action="dump">Export to SQL</a></li>
+      <li class="divider"></li>
+      <li><a href="#" data-action="truncate">Truncate Table</a></li>
+      <li><a href="#" data-action="delete">Delete Table</a></li>
+    </ul>
+  </div>
+  <div id="view_context_menu">
+    <ul class="dropdown-menu" role="menu">
+      <li><a href="#" data-action="copy">Copy View Name</a></li>
+      <li class="divider"></li>
       <li><a href="#" data-action="export" data-format="json">Export to JSON</a></li>
       <li><a href="#" data-action="export" data-format="csv">Export to CSV</a></li>
       <li><a href="#" data-action="export" data-format="xml">Export to XML</a></li>
       <li class="divider"></li>
-      <li><a href="#" data-action="truncate">Truncate table</a></li>
-      <li><a href="#" data-action="delete">Delete table</a></li>
+      <li><a href="#" data-action="delete">Delete View</a></li>
     </ul>
   </div>
-  <div id="databases_context_menu">
-    <ul class="dropdown-menu" role="menu"></ul>
+  <div id="current_database_context_menu">
+    <ul class="dropdown-menu" role="menu">
+      <li><a href="#" data-action="export">Export SQL dump</a></li>
+    </ul>
+  </div>
+  <div id="results_header_menu">
+    <ul class="dropdown-menu" role="menu">
+      <li><a href="#" data-action="unique_values" data-counts="false">Unique Values</a></li>
+      <li><a href="#" data-action="unique_values" data-counts="true">Unique Values + Counts</a></li>
+      <li><a href="#" data-action="copy_name">Copy Column Name</a></li>
+    </ul>
   </div>
 </body>
 </html>
