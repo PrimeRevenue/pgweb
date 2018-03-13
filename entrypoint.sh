@@ -12,7 +12,7 @@ if [[ $DEBUG ]]; then
     fi
 fi
 
-if $READONLY; then
+if [[ $READONLY ]]; then
        executable="$executable --readonly"
 fi
 echo "$executable"
